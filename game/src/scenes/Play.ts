@@ -121,7 +121,7 @@ export class PlayScene extends Container {
 
     // Result text (hidden initially)
     const resultStyle = new TextStyle({
-      fontFamily: 'Montserrat',
+      fontFamily: 'Hanalei Fill',
       fontSize: 36,
       fill: 0xFFFFFF,
       stroke: 0x000000
