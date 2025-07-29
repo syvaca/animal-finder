@@ -38,7 +38,9 @@ export class Animal extends Sprite {
     this.cursor = 'pointer';
 
     // Scale the sprite to a reasonable size
-    this.scale.set(0.5);
+    const maxSize = 80;
+    const scaleFactor = maxSize / Math.max(this.texture.width, this.texture.height);
+    this.scale.set(scaleFactor);
   }
 
   update(deltaTime: number) {

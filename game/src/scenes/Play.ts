@@ -1,10 +1,14 @@
-import { Application, Container, Assets, Text, TextStyle, Graphics, Sprite } from 'pixi.js';
+import { Application, Container, Assets, Text, TextStyle, Graphics, Sprite, Texture } from 'pixi.js';
 import { Animal, AnimalType } from '../Animal';
 
 export class PlayScene extends Container {
+  // overlay
+  private overlayContainer!: Container;
+  private overlayTimeout!: ReturnType<typeof setTimeout>;
+
   private animals: Animal[] = [];
   private gameTimer!: Text;
-  private timeRemaining: number = 30;
+  private timeRemaining: number = 15;
   private gameState: 'playing' | 'won' | 'lost' = 'playing';
   private background!: Graphics;
   private instructions!: Text;
@@ -19,44 +23,37 @@ export class PlayScene extends Container {
   }
 
   private async setupGame() {
-    // Create background
-    this.background = new Graphics();
-    this.background.beginFill(0x87CEEB); // Sky blue
-    this.background.drawRect(0, 0, window.innerWidth, window.innerHeight);
-    this.background.endFill();
-    this.addChild(this.background);
+    this.loadBackground();
 
-    // Load animal textures
+    // Load and animal textures
     const textures = await this.loadAnimalTextures();
-    
-    // Create animals
-    this.createAnimals(textures);
     
     // Create UI
     this.createUI();
-    
-    // Start game loop
-    this.app.ticker.add(this.gameLoop);
+
+    // Show overlay (then create animals and start game after delay)
+    this.showWantedOverlay(textures.lion, () => {
+      this.createAnimals(textures);
+      this.app.ticker.add(this.gameLoop);
+    });
+  }
+
+  private loadBackground() {
+    const background = Sprite.from('background');
+    background.width = window.innerWidth;
+    background.height = window.innerHeight;
+    this.addChild(background);
   }
 
   private async loadAnimalTextures() {
-    // For now, create colored rectangles as placeholders
-    // TODO: Implement proper sprite sheet loading
-    const createTexture = (color: number) => {
-      const graphics = new Graphics();
-      graphics.beginFill(color);
-      graphics.drawRoundedRect(0, 0, 64, 64, 8);
-      graphics.endFill();
-      return this.app.renderer.generateTexture(graphics);
-    };
+    const atlas = await Assets.load('/assets/sprites/animals.json');
 
     return {
-      monkey: createTexture(0x8B4513), // Brown
-      giraffe: createTexture(0xDAA520), // Goldenrod
-      elephant: createTexture(0x696969), // Dim gray
-      lion: createTexture(0xFFD700)     // Gold
+      monkey: atlas.textures['monkey.png'],
+      giraffe: atlas.textures['giraffe.png'],
+      elephant: atlas.textures['elephant.png'],
+      lion: atlas.textures['lion.png']
     };
-
   }
 
   private createAnimals(textures: any) {
@@ -103,22 +100,6 @@ export class PlayScene extends Container {
     this.gameTimer.y = 20;
     this.addChild(this.gameTimer);
 
-    // Instructions
-    const instructionStyle = new TextStyle({
-      fontFamily: 'Arial',
-      fontSize: 24,
-      fill: 0xFFFFFF,
-      stroke: 0x000000
-    });
-
-    this.instructions = new Text({
-      text: 'Find the LION among the animals!',
-      style: instructionStyle
-    });
-    this.instructions.x = window.innerWidth / 2 - this.instructions.width / 2;
-    this.instructions.y = 80;
-    this.addChild(this.instructions);
-
     // Result text (hidden initially)
     const resultStyle = new TextStyle({
       fontFamily: 'Arial',
@@ -137,6 +118,50 @@ export class PlayScene extends Container {
     this.addChild(this.resultText);
   }
 
+  private showWantedOverlay(texture: Texture, onComplete: () => void) {
+    this.overlayContainer = new Container();
+  
+    // Dimmed background
+    const dimmer = new Graphics();
+    dimmer.beginFill(0x000000, 0.7);
+    dimmer.drawRect(0, 0, window.innerWidth, window.innerHeight);
+    dimmer.endFill();
+    this.overlayContainer.addChild(dimmer);
+  
+    // Label text
+    const label = new Text('FIND THIS ANIMAL', new TextStyle({
+      fontFamily: 'Arial',
+      fontSize: 36,
+      fill: 0xFFFFFF,
+      stroke: 0x000000,
+    }));
+    label.anchor.set(0.5);
+    label.x = window.innerWidth / 2;
+    label.y = window.innerHeight / 4;
+    this.overlayContainer.addChild(label);
+  
+    // Wanted animal image
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5);
+    sprite.x = window.innerWidth / 2;
+    sprite.y = window.innerHeight / 2;
+  
+    // Scale to fit around 150px
+    const maxSize = 150;
+    const scale = Math.min(maxSize / texture.width, maxSize / texture.height);
+    sprite.scale.set(scale);
+  
+    this.overlayContainer.addChild(sprite);
+  
+    this.addChild(this.overlayContainer);
+  
+    // Remove overlay after 5 seconds
+    this.overlayTimeout = setTimeout(() => {
+      this.removeChild(this.overlayContainer);
+      onComplete(); // Start game
+    }, 3000);
+  }
+  
   private gameLoop = () => {
     if (this.gameState !== 'playing') return;
 
@@ -158,10 +183,14 @@ export class PlayScene extends Container {
     if (this.gameState !== 'playing') return;
 
     if (animal.isWanted) {
+      animal.tint = 0x65CC3F; // Flash green
+      setTimeout(() => {
+        animal.tint = 0xFFFFFF; // Reset to normal
+      }, 500);
       this.endGame(true);
     } else {
       // Wrong animal clicked - maybe add some feedback
-      animal.tint = 0xFF0000; // Flash red
+      animal.tint = 0xCC523F; // Flash red
       setTimeout(() => {
         animal.tint = 0xFFFFFF; // Reset to normal
       }, 200);
@@ -194,17 +223,17 @@ export class PlayScene extends Container {
     this.animals = [];
 
     // Reset game state
-    this.timeRemaining = 30;
+    this.timeRemaining = 15;
     this.gameState = 'playing';
     this.resultText.visible = false;
 
     // Reload textures and recreate animals
     this.loadAnimalTextures().then(textures => {
-      this.createAnimals(textures);
+      this.showWantedOverlay(textures.lion, () => {
+        this.createAnimals(textures);
+        this.app.ticker.add(this.gameLoop);
+      });
     });
-
-    // Restart game loop
-    this.app.ticker.add(this.gameLoop);
   }
 
   public resize() {
