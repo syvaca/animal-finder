@@ -234,6 +234,15 @@ export class PlayScene extends Container {
         this.restartGame();
       }, 3000);
     } else {
+      // Remove all animals except the wanted animal
+      const wantedAnimal = this.animals.find(a => a.isWanted);
+      this.animals.forEach(animal => {
+        if (!animal.isWanted) {
+          this.removeChild(animal);
+          animal.destroy();
+        }
+      });
+      this.animals = wantedAnimal ? [wantedAnimal] : [];
       // Return to menu after 2 seconds if lost
       setTimeout(() => {
         this.onStart();
