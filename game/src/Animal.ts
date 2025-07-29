@@ -7,6 +7,9 @@ export enum AnimalType {
   LION = 'lion'
 }
 
+const TOP_UI_HEIGHT = 70;
+const VELOCITY_SCALE = 0.7;
+
 export class Animal extends Sprite {
   public velocity: Point;
   public type: AnimalType;
@@ -22,13 +25,13 @@ export class Animal extends Sprite {
     const speed = 1 + Math.random() * 2; // Speed between 1-3
     const angle = Math.random() * Math.PI * 2;
     this.velocity = new Point(
-      Math.cos(angle) * speed,
-      Math.sin(angle) * speed
+      Math.cos(angle) * speed * VELOCITY_SCALE,
+      Math.sin(angle) * speed * VELOCITY_SCALE
     );
 
     // Set random position
     this.x = Math.random() * (window.innerWidth - 64);
-    this.y = Math.random() * (window.innerHeight - 64);
+    this.y = TOP_UI_HEIGHT + Math.random() * (window.innerHeight - TOP_UI_HEIGHT - 64);
 
     // Set random z-index (depth)
     this.zIndex = Math.random() * 1000;
@@ -45,8 +48,8 @@ export class Animal extends Sprite {
 
   update(deltaTime: number) {
     // Update position based on velocity
-    this.x += this.velocity.x * deltaTime;
-    this.y += this.velocity.y * deltaTime;
+    this.x += this.velocity.x * deltaTime * VELOCITY_SCALE;
+    this.y += this.velocity.y * deltaTime * VELOCITY_SCALE;
 
     // Bounce off walls
     const bounds = this.getBounds();
@@ -58,9 +61,9 @@ export class Animal extends Sprite {
       this.x = Math.max(0, Math.min(screenWidth - bounds.width, this.x));
     }
 
-    if (this.y <= 0 || this.y + bounds.height >= screenHeight) {
+    if (this.y <= TOP_UI_HEIGHT || this.y + bounds.height >= screenHeight) {
       this.velocity.y *= -1;
-      this.y = Math.max(0, Math.min(screenHeight - bounds.height, this.y));
+      this.y = Math.max(TOP_UI_HEIGHT, Math.min(screenHeight - bounds.height, this.y));
     }
   }
 

@@ -1,4 +1,6 @@
 import { Application, Container } from 'pixi.js';
+import { MenuScene } from './MenuScene';
+import { PlayScene } from './Play';
 
 export interface ResizableScene extends Container {
   resize(): void;

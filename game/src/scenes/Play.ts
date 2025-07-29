@@ -6,6 +6,15 @@ export class PlayScene extends Container {
   private overlayContainer!: Container;
   private overlayTimeout!: ReturnType<typeof setTimeout>;
 
+  // wanted animal
+  private wantedAnimals: AnimalType[] = [
+    AnimalType.MONKEY,
+    AnimalType.GIRAFFE,
+    AnimalType.ELEPHANT,
+    AnimalType.LION
+  ];
+  private wantedAnimalType!: AnimalType;
+
   private animals: Animal[] = [];
   private gameTimer!: Text;
   private timeRemaining: number = 15;
@@ -19,6 +28,7 @@ export class PlayScene extends Container {
     private readonly onStart: () => void
   ) {
     super();
+    this.sortableChildren = true;
     this.setupGame();
   }
 
@@ -26,13 +36,15 @@ export class PlayScene extends Container {
     this.loadBackground();
 
     // Load and animal textures
+    const randomIndex = Math.floor(Math.random() * this.wantedAnimals.length);
+    this.wantedAnimalType = this.wantedAnimals[randomIndex];
     const textures = await this.loadAnimalTextures();
     
     // Create UI
     this.createUI();
 
     // Show overlay (then create animals and start game after delay)
-    this.showWantedOverlay(textures.lion, () => {
+    this.showWantedOverlay(textures[this.wantedAnimalType], () => {
       this.createAnimals(textures);
       this.app.ticker.add(this.gameLoop);
     });
@@ -57,38 +69,45 @@ export class PlayScene extends Container {
   }
 
   private createAnimals(textures: any) {
-    // Create 50 regular animals (mix of monkey, giraffe, elephant)
-    const regularAnimals = [
-      { type: AnimalType.MONKEY, count: 17 },
-      { type: AnimalType.GIRAFFE, count: 17 },
-      { type: AnimalType.ELEPHANT, count: 16 }
-    ];
+    // Determine non-wanted animal types
+    const nonWantedTypes = Object.values(AnimalType).filter(
+      type => type !== this.wantedAnimalType
+    );
 
-    regularAnimals.forEach(({ type, count }) => {
-      for (let i = 0; i < count; i++) {
-        const animal = new Animal(textures[type], type, false);
+    // Create 17 of each non-wanted animal
+    nonWantedTypes.forEach(type => {
+      for (let i = 0; i < 17; i++) {
+        const animal = new Animal(this.getTextureForType(textures, type), type, false);
         this.animals.push(animal);
         this.addChild(animal);
       }
     });
 
-    // Create 1 lion (wanted animal)
-    const lion = new Animal(textures.lion, AnimalType.LION, true);
-    this.animals.push(lion);
-    this.addChild(lion);
-
+    // Create 1 wanted animal
+    const wantedAnimal = new Animal(
+      this.getTextureForType(textures, this.wantedAnimalType),
+      this.wantedAnimalType,
+      true
+    );
+    this.animals.push(wantedAnimal);
+    this.addChild(wantedAnimal);
+    
     // Set up click handlers
     this.animals.forEach(animal => {
       animal.onClick(() => this.onAnimalClick(animal));
     });
   }
 
+  private getTextureForType(textures: Record<string, Texture>, type: AnimalType): Texture {
+    return textures[type];
+  }
+
   private createUI() {
     // Timer text
     const timerStyle = new TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: 'Hanalei Fill',
       fontSize: 48,
-      fill: 0xFFFFFF,
+      fill: 0xEBBD72,
       stroke: 0x000000
     });
 
@@ -102,7 +121,7 @@ export class PlayScene extends Container {
 
     // Result text (hidden initially)
     const resultStyle = new TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: 'Montserrat',
       fontSize: 36,
       fill: 0xFFFFFF,
       stroke: 0x000000
@@ -115,6 +134,7 @@ export class PlayScene extends Container {
     this.resultText.x = window.innerWidth / 2 - this.resultText.width / 2;
     this.resultText.y = window.innerHeight / 2 - this.resultText.height / 2;
     this.resultText.visible = false;
+    this.resultText.zIndex = 9999;
     this.addChild(this.resultText);
   }
 
@@ -129,10 +149,10 @@ export class PlayScene extends Container {
     this.overlayContainer.addChild(dimmer);
   
     // Label text
-    const label = new Text('FIND THIS ANIMAL', new TextStyle({
-      fontFamily: 'Arial',
-      fontSize: 36,
-      fill: 0xFFFFFF,
+    const label = new Text('WANTED', new TextStyle({
+      fontFamily: 'Hanalei Fill',
+      fontSize: 60,
+      fill: 0xEBBD72,
       stroke: 0x000000,
     }));
     label.anchor.set(0.5);
@@ -200,7 +220,7 @@ export class PlayScene extends Container {
   private endGame(won: boolean) {
     this.gameState = won ? 'won' : 'lost';
     
-    this.resultText.text = won ? 'YOU WIN! 🦁' : 'TIME\'S UP! You lose!';
+    this.resultText.text = won ? 'YOU WIN!' : 'TIME\'S UP! YOU LOSE!';
     this.resultText.visible = true;
     this.resultText.x = window.innerWidth / 2 - this.resultText.width / 2;
     this.resultText.y = window.innerHeight / 2 - this.resultText.height / 2;
@@ -208,10 +228,17 @@ export class PlayScene extends Container {
     // Stop the game loop
     this.app.ticker.remove(this.gameLoop);
 
-    // Add restart functionality
-    setTimeout(() => {
-      this.restartGame();
-    }, 3000);
+    if (won) {
+      // Add restart functionality for win
+      setTimeout(() => {
+        this.restartGame();
+      }, 3000);
+    } else {
+      // Return to menu after 2 seconds if lost
+      setTimeout(() => {
+        this.onStart();
+      }, 2000);
+    }
   }
 
   private restartGame() {
@@ -228,8 +255,10 @@ export class PlayScene extends Container {
     this.resultText.visible = false;
 
     // Reload textures and recreate animals
+    const randomIndex = Math.floor(Math.random() * this.wantedAnimals.length);
+    this.wantedAnimalType = this.wantedAnimals[randomIndex];
     this.loadAnimalTextures().then(textures => {
-      this.showWantedOverlay(textures.lion, () => {
+      this.showWantedOverlay(textures[this.wantedAnimalType], () => {
         this.createAnimals(textures);
         this.app.ticker.add(this.gameLoop);
       });
