@@ -11,7 +11,7 @@ async function bootstrap() {
   const app = new Application();
   await app.init({
     resizeTo: container,
-    backgroundColor: 0x0,
+    backgroundColor: 0x87CEEB,
     antialias: true,
     autoDensity: true,
   });
@@ -20,6 +20,8 @@ async function bootstrap() {
 
   // Load assets
   await Assets.load([
+    { alias: 'animals', src: '/assets/sprites/animals.json' },
+    { alias: 'background', src: '/assets/sprites/background.png' },
   ]);
 
   const sceneManager = new SceneManager(app);
@@ -27,7 +29,9 @@ async function bootstrap() {
   function showPlay() {
     const play = new PlayScene(
       app,
-      () => {}
+      () => {
+        console.log('Game started');
+      }
     );
     sceneManager.changeScene(play);
   }
