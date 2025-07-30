@@ -17,7 +17,7 @@ export class PlayScene extends Container {
 
   private animals: Animal[] = [];
   private gameTimer!: Text;
-  private timeRemaining: number = 10;
+  private timeRemaining: number = 15;
   private gameState: 'playing' | 'won' | 'lost' = 'playing';
   private background!: Graphics;
   private instructions!: Text;
@@ -41,10 +41,10 @@ export class PlayScene extends Container {
     const textures = await this.loadAnimalTextures();
     
     // Create UI
-    this.createUI();
+    await this.createUI();
 
     // Show overlay (then create animals and start game after delay)
-    this.showWantedOverlay(textures[this.wantedAnimalType], () => {
+    await this.showWantedOverlay(textures[this.wantedAnimalType], () => {
       this.createAnimals(textures);
       this.app.ticker.add(this.gameLoop);
     });
@@ -102,7 +102,40 @@ export class PlayScene extends Container {
     return textures[type];
   }
 
-  private createUI() {
+  private async createPoster() {
+    // Remove any existing poster sprites by finding them in children
+    this.children.forEach(child => {
+      if (child instanceof Sprite && child.x === window.innerWidth - 50 && (child.y === 50 || child.y === 55)) {
+        console.log('Removing old sprite');
+        this.removeChild(child);
+        child.destroy();
+      }
+    });
+    
+    // Wanted poster and animal in upper right corner
+    const atlas = await Assets.load('/assets/sprites/animals.json');
+    const posterTexture = atlas.textures['wanted poster.png'];
+    const animalTexture = atlas.textures[`${this.wantedAnimalType}.png`];
+    
+    // Create poster sprite
+    const posterSprite = new Sprite(posterTexture);
+    posterSprite.anchor.set(0.5);
+    posterSprite.x = window.innerWidth - 50; // Upper right corner
+    posterSprite.y = 50; // Same height as timer
+    posterSprite.scale.set(0.1); // Make it small
+    this.addChild(posterSprite);
+    
+    // Create animal sprite
+    const animalSprite = new Sprite(animalTexture);
+    animalSprite.anchor.set(0.5);
+    animalSprite.x = window.innerWidth - 50; // Same x as poster
+    animalSprite.y = 50 + 5; // Slightly lower than poster center
+    animalSprite.scale.set(0.08); // Make animal smaller than poster
+    this.addChild(animalSprite);
+
+  }
+
+  private async createUI() {
     // Timer text
     const timerStyle = new TextStyle({
       fontFamily: 'Hanalei Fill',
@@ -118,6 +151,8 @@ export class PlayScene extends Container {
     this.gameTimer.x = 20;
     this.gameTimer.y = 20;
     this.addChild(this.gameTimer);
+
+    this.createPoster();
 
     // Result text (hidden initially)
     const resultStyle = new TextStyle({
@@ -138,7 +173,7 @@ export class PlayScene extends Container {
     this.addChild(this.resultText);
   }
 
-  private showWantedOverlay(texture: Texture, onComplete: () => void) {
+  private async showWantedOverlay(texture: Texture, onComplete: () => void) {
     this.overlayContainer = new Container();
   
     // Dimmed background
@@ -148,23 +183,26 @@ export class PlayScene extends Container {
     dimmer.endFill();
     this.overlayContainer.addChild(dimmer);
   
-    // Label text
-    const label = new Text('WANTED', new TextStyle({
-      fontFamily: 'Hanalei Fill',
-      fontSize: 60,
-      fill: 0xEBBD72,
-      stroke: 0x000000,
-    }));
-    label.anchor.set(0.5);
-    label.x = window.innerWidth / 2;
-    label.y = window.innerHeight / 4;
-    this.overlayContainer.addChild(label);
+    // Wanted poster background
+    const atlas = await Assets.load('/assets/sprites/animals.json');
+    const posterTexture = atlas.textures['wanted poster.png'];
+    const posterSprite = new Sprite(posterTexture);
+    posterSprite.anchor.set(0.5);
+    posterSprite.x = window.innerWidth / 2;
+    posterSprite.y = window.innerHeight / 2;
+    
+    // Scale poster to reasonable size
+    const posterMaxSize = 300;
+    const posterScale = Math.min(posterMaxSize / posterTexture.width, posterMaxSize / posterTexture.height);
+    posterSprite.scale.set(posterScale);
+    
+    this.overlayContainer.addChild(posterSprite);
   
     // Wanted animal image
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5);
     sprite.x = window.innerWidth / 2;
-    sprite.y = window.innerHeight / 2;
+    sprite.y = window.innerHeight / 2 + 20; // Move animal lower on the poster
   
     // Scale to fit around 150px
     const maxSize = 150;
@@ -182,11 +220,21 @@ export class PlayScene extends Container {
     }, 3000);
   }
   
+  private lastTime: number = 0;
+  
   private gameLoop = () => {
     if (this.gameState !== 'playing') return;
 
-    // Update timer
-    this.timeRemaining -= 1/60; // Convert to seconds
+    // Update timer using actual delta time
+    const currentTime = Date.now();
+    if (this.lastTime === 0) {
+      this.lastTime = currentTime;
+    }
+    
+    const deltaSeconds = (currentTime - this.lastTime) / 1000;
+    this.timeRemaining -= deltaSeconds;
+    this.lastTime = currentTime;
+    
     this.gameTimer.text = `Time: ${Math.max(0, Math.ceil(this.timeRemaining))}`;
 
     // Check if time ran out
@@ -250,7 +298,7 @@ export class PlayScene extends Container {
     }
   }
 
-  private restartGame() {
+  private async restartGame() {
     // Clear all animals
     this.animals.forEach(animal => {
       this.removeChild(animal);
@@ -259,15 +307,16 @@ export class PlayScene extends Container {
     this.animals = [];
 
     // Reset game state
-    this.timeRemaining = 10;
+    this.timeRemaining = 15;
     this.gameState = 'playing';
     this.resultText.visible = false;
 
     // Reload textures and recreate animals
     const randomIndex = Math.floor(Math.random() * this.wantedAnimals.length);
     this.wantedAnimalType = this.wantedAnimals[randomIndex];
-    this.loadAnimalTextures().then(textures => {
-      this.showWantedOverlay(textures[this.wantedAnimalType], () => {
+    await this.createPoster();
+    this.loadAnimalTextures().then(async textures => {
+      await this.showWantedOverlay(textures[this.wantedAnimalType], async () => {
         this.createAnimals(textures);
         this.app.ticker.add(this.gameLoop);
       });
