@@ -5,6 +5,8 @@ export class PlayScene extends Container {
   // overlay
   private overlayContainer!: Container;
   private overlayTimeout!: ReturnType<typeof setTimeout>;
+  private round:number = 1;
+  private speedMultiplier: number = 1; // Add speed multiplier
 
   // wanted animal
   private wantedAnimals: AnimalType[] = [
@@ -20,7 +22,6 @@ export class PlayScene extends Container {
   private timeRemaining: number = 15;
   private gameState: 'playing' | 'won' | 'lost' = 'playing';
   private background!: Graphics;
-  private instructions!: Text;
   private resultText!: Text;
 
   constructor(
@@ -78,6 +79,7 @@ export class PlayScene extends Container {
     nonWantedTypes.forEach(type => {
       for (let i = 0; i < 17; i++) {
         const animal = new Animal(this.getTextureForType(textures, type), type, false);
+        animal.setSpeedMultiplier(this.speedMultiplier); // Set speed multiplier
         this.animals.push(animal);
         this.addChild(animal);
       }
@@ -89,6 +91,7 @@ export class PlayScene extends Container {
       this.wantedAnimalType,
       true
     );
+    wantedAnimal.setSpeedMultiplier(this.speedMultiplier); // Set speed multiplier
     this.animals.push(wantedAnimal);
     this.addChild(wantedAnimal);
     
@@ -182,6 +185,18 @@ export class PlayScene extends Container {
     dimmer.drawRect(0, 0, window.innerWidth, window.innerHeight);
     dimmer.endFill();
     this.overlayContainer.addChild(dimmer);
+
+    // Round number
+    const label = new Text(`Round ${this.round}`, new TextStyle({
+      fontFamily: 'Hanalei Fill',
+      fontSize: 60,
+      fill: 0xEBBD72,
+      stroke: 0x000000,
+    }));
+    label.anchor.set(0.5);
+    label.x = window.innerWidth / 2;
+    label.y = window.innerHeight / 4;
+    this.overlayContainer.addChild(label);
   
     // Wanted poster background
     const atlas = await Assets.load('/assets/sprites/animals.json');
@@ -277,6 +292,7 @@ export class PlayScene extends Container {
     this.app.ticker.remove(this.gameLoop);
 
     if (won) {
+      this.round++;
       // Add restart functionality for win
       setTimeout(() => {
         this.restartGame();
@@ -310,6 +326,12 @@ export class PlayScene extends Container {
     this.timeRemaining = 15;
     this.gameState = 'playing';
     this.resultText.visible = false;
+    this.lastTime = 0; // Reset lastTime to fix timer issue
+
+    // Increase speed every 3 rounds
+    if (this.round % 3 === 0) {
+      this.speedMultiplier += 0.40; // Increase speed by 50% every 3 rounds
+    }
 
     // Reload textures and recreate animals
     const randomIndex = Math.floor(Math.random() * this.wantedAnimals.length);
@@ -331,11 +353,6 @@ export class PlayScene extends Container {
     this.background.beginFill(0x87CEEB);
     this.background.drawRect(0, 0, window.innerWidth, window.innerHeight);
     this.background.endFill();
-
-    // Update UI positions
-    if (this.instructions) {
-      this.instructions.x = window.innerWidth / 2 - this.instructions.width / 2;
-    }
     
     if (this.resultText && this.resultText.visible) {
       this.resultText.x = window.innerWidth / 2 - this.resultText.width / 2;

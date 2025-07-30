@@ -14,6 +14,7 @@ export class Animal extends Sprite {
   public velocity: Point;
   public type: AnimalType;
   public isWanted: boolean;
+  private speedMultiplier: number = 1;
 
   constructor(texture: Texture, type: AnimalType, isWanted: boolean = false) {
     super(texture);
@@ -47,9 +48,9 @@ export class Animal extends Sprite {
   }
 
   update(deltaTime: number) {
-    // Update position based on velocity
-    this.x += this.velocity.x * deltaTime * VELOCITY_SCALE;
-    this.y += this.velocity.y * deltaTime * VELOCITY_SCALE;
+    // Update position based on velocity with speed multiplier
+    this.x += this.velocity.x * deltaTime * VELOCITY_SCALE * this.speedMultiplier;
+    this.y += this.velocity.y * deltaTime * VELOCITY_SCALE * this.speedMultiplier;
 
     // Bounce off walls
     const bounds = this.getBounds();
@@ -65,6 +66,10 @@ export class Animal extends Sprite {
       this.velocity.y *= -1;
       this.y = Math.max(TOP_UI_HEIGHT, Math.min(screenHeight - bounds.height, this.y));
     }
+  }
+
+  setSpeedMultiplier(multiplier: number) {
+    this.speedMultiplier = multiplier;
   }
 
   onClick(callback: () => void) {
