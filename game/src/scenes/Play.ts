@@ -10,14 +10,14 @@ export class PlayScene extends Container {
   private wantedAnimals: AnimalType[] = [
     AnimalType.MONKEY,
     AnimalType.GIRAFFE,
-    AnimalType.ELEPHANT,
+    AnimalType.JAGUAR,
     AnimalType.LION
   ];
   private wantedAnimalType!: AnimalType;
 
   private animals: Animal[] = [];
   private gameTimer!: Text;
-  private timeRemaining: number = 15;
+  private timeRemaining: number = 10;
   private gameState: 'playing' | 'won' | 'lost' = 'playing';
   private background!: Graphics;
   private instructions!: Text;
@@ -63,7 +63,7 @@ export class PlayScene extends Container {
     return {
       monkey: atlas.textures['monkey.png'],
       giraffe: atlas.textures['giraffe.png'],
-      elephant: atlas.textures['elephant.png'],
+      jaguar: atlas.textures['jaguar.png'],
       lion: atlas.textures['lion.png']
     };
   }
@@ -259,7 +259,7 @@ export class PlayScene extends Container {
     this.animals = [];
 
     // Reset game state
-    this.timeRemaining = 15;
+    this.timeRemaining = 10;
     this.gameState = 'playing';
     this.resultText.visible = false;
 

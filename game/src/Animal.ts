@@ -3,7 +3,7 @@ import { Sprite, Texture, Point } from 'pixi.js';
 export enum AnimalType {
   MONKEY = 'monkey',
   GIRAFFE = 'giraffe',
-  ELEPHANT = 'elephant',
+  JAGUAR = 'jaguar',
   LION = 'lion'
 }
 

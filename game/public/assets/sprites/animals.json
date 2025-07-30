@@ -1,8 +1,28 @@
 {
 	"frames": {
-		"elephant.png": {
+		"crocodile.png": {
 			"frame": {
 				"x": 1,
+				"y": 1,
+				"w": 458,
+				"h": 519
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 458,
+				"h": 519
+			},
+			"sourceSize": {
+				"w": 458,
+				"h": 519
+			}
+		},
+		"elephant.png": {
+			"frame": {
+				"x": 461,
 				"y": 1,
 				"w": 453,
 				"h": 372
@@ -22,7 +42,7 @@
 		},
 		"giraffe.png": {
 			"frame": {
-				"x": 456,
+				"x": 916,
 				"y": 1,
 				"w": 359,
 				"h": 479
@@ -40,10 +60,50 @@
 				"h": 479
 			}
 		},
+		"hippo.png": {
+			"frame": {
+				"x": 461,
+				"y": 482,
+				"w": 466,
+				"h": 583
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 466,
+				"h": 583
+			},
+			"sourceSize": {
+				"w": 466,
+				"h": 583
+			}
+		},
+		"jaguar.png": {
+			"frame": {
+				"x": 929,
+				"y": 482,
+				"w": 487,
+				"h": 558
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 487,
+				"h": 558
+			},
+			"sourceSize": {
+				"w": 487,
+				"h": 558
+			}
+		},
 		"lion.png": {
 			"frame": {
-				"x": 1,
-				"y": 375,
+				"x": 1277,
+				"y": 1,
 				"w": 422,
 				"h": 442
 			},
@@ -62,8 +122,8 @@
 		},
 		"monkey.png": {
 			"frame": {
-				"x": 817,
-				"y": 1,
+				"x": 1418,
+				"y": 445,
 				"w": 430,
 				"h": 355
 			},
@@ -79,6 +139,46 @@
 				"w": 430,
 				"h": 355
 			}
+		},
+		"wanted poster.png": {
+			"frame": {
+				"x": 929,
+				"y": 1042,
+				"w": 543,
+				"h": 705
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 543,
+				"h": 705
+			},
+			"sourceSize": {
+				"w": 543,
+				"h": 705
+			}
+		},
+		"zebra.png": {
+			"frame": {
+				"x": 1850,
+				"y": 1,
+				"w": 434,
+				"h": 680
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 434,
+				"h": 680
+			},
+			"sourceSize": {
+				"w": 434,
+				"h": 680
+			}
 		}
 	},
 	"meta": {
@@ -87,8 +187,8 @@
 		"image": "animals.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 1248,
-			"h": 818
+			"w": 2285,
+			"h": 1748
 		},
 		"scale": "1"
 	}
