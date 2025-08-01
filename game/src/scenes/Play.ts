@@ -330,7 +330,7 @@ export class PlayScene extends Container {
 
     // Increase speed every 3 rounds
     if (this.round % 3 === 0) {
-      this.speedMultiplier += 0.40; // Increase speed by 50% every 3 rounds
+      this.speedMultiplier += 0.50; // Increase speed by 50% every 3 rounds
     }
 
     // Reload textures and recreate animals
